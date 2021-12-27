@@ -219,9 +219,10 @@ export default {
 </style>
 <style>
 .el-header {
-  background-color: #b3c0d1;
-  color: #333;
-  line-height: 60px;
+  background-color: #ffffff;
+    color: #333;
+    line-height: 60px;
+    border-bottom: 1px solid #e8e8e8;
 }
 
 .el-aside {
