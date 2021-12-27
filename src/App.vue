@@ -45,7 +45,7 @@ canvas {
   margin: 0;
   padding: 0;
   font-family: MicrosoftYaHeiUI;
-  box-sizing: border-box;
+  // box-sizing: border-box;
 }
 
 body {
