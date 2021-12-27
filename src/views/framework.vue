@@ -1,18 +1,26 @@
 <template>
   <el-container class="framework">
-    <el-aside style="background-color: rgb(238, 241, 246);width:auto">
-      <el-radio-group v-model="isCollapse" style="margin-bottom: 20px">
-        <el-radio-button v-if="isCollapse" :label="false">展开</el-radio-button>
-        <el-radio-button v-if="!isCollapse" :label="true">收起</el-radio-button>
-      </el-radio-group>
-      <el-menu :default-openeds="['0']" :default-active="defaultActive" @open="handleOpen" @close="handleClose" :collapse="isCollapse" class="el-menu-vertical-demo">
+    <el-aside style="background-color: rgb(238, 241, 246); width: auto">
+    
+      <el-menu
+        :default-openeds="['0']"
+        :default-active="defaultActive"
+        @open="handleOpen"
+        @close="handleClose"
+        :collapse="isCollapse"
+         background-color="#001529"
+        text-color="#fff"
+        active-text-color="#ffd04b"
+        class="el-menu-vertical-demo"
+      >
         <el-submenu
           :index="`${index}`"
           v-for="(item, index) in menuList2"
           :key="index"
         >
           <template v-slot:title
-            ><i class="el-icon-location"></i><span>{{ item.title }}</span></template
+            ><i class="el-icon-location"></i
+            ><span>{{ item.title }}</span></template
           >
           <el-menu-item-group
             v-show="!val.children"
@@ -46,27 +54,41 @@
           <el-menu-item
             :index="`${index}`"
             @click="funGo(item.path, `${index}`)"
-            > 
+          >
             <i class="el-icon-menu"></i>
-            <template v-slot:title><span>{{ item.title }}</span></template>
-         </el-menu-item>
+            <template v-slot:title
+              ><span>{{ item.title }}</span></template
+            >
+          </el-menu-item>
         </el-menu-item-group>
       </el-menu>
     </el-aside>
 
     <el-container>
       <el-header style="text-align: right; font-size: 12px">
-        <el-dropdown>
-          <i class="el-icon-setting" style="margin-right: 15px"></i>
-          <template #dropdown>
-             <el-dropdown-menu >
-              <el-dropdown-item>查看</el-dropdown-item>
-              <el-dropdown-item>新增</el-dropdown-item>
-              <el-dropdown-item>删除</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <span>王小虎</span>
+        <div style="display: flex; justify-content: space-between">
+          <i
+            :class="[
+              { 'el-icon-s-fold': !isCollapse },
+              'el-icon-s-unfold',
+              'icon-switch',
+            ]"
+            @click="funSwitch()"
+          ></i>
+          <div>
+            <el-dropdown>
+              <i class="el-icon-setting" style="margin-right: 15px"></i>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item>查看</el-dropdown-item>
+                  <el-dropdown-item>新增</el-dropdown-item>
+                  <el-dropdown-item>删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <span>王小虎</span>
+          </div>
+        </div>
       </el-header>
       <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
         <el-breadcrumb-item v-for="item in breadcrumb">{{
@@ -84,7 +106,7 @@ import { ref, computed, watch, getCurrentInstance } from "vue";
 export default {
   data() {
     return {
-      isCollapse:false,
+      isCollapse: false,
       menuList: [
         {
           title: "导航一",
@@ -140,12 +162,15 @@ export default {
     },
   },
   methods: {
-     handleOpen(key, keyPath) {
-        console.log(key, keyPath);
-      },
-      handleClose(key, keyPath) {
-        console.log(key, keyPath);
-      },
+     funSwitch() {
+      this.isCollapse = !this.isCollapse;
+    },
+    handleOpen(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    handleClose(key, keyPath) {
+      console.log(key, keyPath);
+    },
     funGo(url, navList) {
       if (url && !window.location.hash.includes(url)) {
         this.$router.push(url);
@@ -186,6 +211,11 @@ export default {
 .breadcrumb {
   padding: 10px;
 }
+.icon-switch {
+  cursor: pointer;
+  font-size: 28px;
+  margin-top: 15px;
+}
 </style>
 <style>
 .el-header {
@@ -202,10 +232,15 @@ export default {
   height: 100%;
   overflow: hidden;
 }
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  width: 200px;
+  min-height: 400px;
+}
+.el-menu--collapse {
+  height: 100% !important;
+}
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  height: 100% !important;
+}
 </style>
-<style >
- .el-menu-vertical-demo:not(.el-menu--collapse) {
-    width: 200px;
-    min-height: 400px;
-  }
-</style>
+
