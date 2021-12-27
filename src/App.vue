@@ -64,22 +64,5 @@ textarea {
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
   -webkit-appearance: none;
 }
-.el-table th.gutter {
-  display: table-cell !important;
-}
-.el-message-box {
-  .el-message-box__container {
-    text-align: center;
-    .el-message-box__status {
-      display: none;
-    }
-    .el-message-box__message {
-      padding: 0;
-    }
-  }
-  .el-message-box__btns {
-    text-align: center;
-    margin-top: 20px;
-  }
-}
+
 </style>
