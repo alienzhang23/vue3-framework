@@ -1,4 +1,4 @@
-import uploadConfig from './uploadConfig'
+
 export function random_string(len) {
     len = len || 32;
     var chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
@@ -90,13 +90,11 @@ export function getCurrentDate() {
     return y + '-' + m + '-' + d;
 }
 
-export function setPreviewFileUrl(filetype, url) {
-    let fileUrl = '';
-    const host = uploadConfig.previewFile[filetype];
-    fileUrl = `${host}?WOPISrc=${uploadConfig.fileHost}/wopi/files/${url.replace(
-      /\//g,
-      '_'
-    )}`;
-    return fileUrl;
+export function codeRule(rule, value, callback) {
+    var reg = new RegExp("^[0-9]*$");
+    if (!reg.test(value)) {
+        callback(new Error('请输入数字'));
+    } else {
+        callback();
+    }
 }
-

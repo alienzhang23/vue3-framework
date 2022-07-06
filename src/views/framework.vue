@@ -80,9 +80,7 @@
               <i class="el-icon-setting" style="margin-right: 15px"></i>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item>查看</el-dropdown-item>
-                  <el-dropdown-item>新增</el-dropdown-item>
-                  <el-dropdown-item>删除</el-dropdown-item>
+                  <el-dropdown-item @click="funLogout()">退出</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -91,7 +89,7 @@
         </div>
       </el-header>
       <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
-        <el-breadcrumb-item v-for="item in breadcrumb">{{
+        <el-breadcrumb-item v-for="item,index in breadcrumb" :key="index">{{
           item
         }}</el-breadcrumb-item>
       </el-breadcrumb>
@@ -162,6 +160,9 @@ export default {
     },
   },
   methods: {
+    funLogout(){
+      this.$router.replace('/login')
+    },
      funSwitch() {
       this.isCollapse = !this.isCollapse;
     },
