@@ -7,13 +7,13 @@
       ></div>
       <div class="pwd" v-show="pageType">
         <p>管理后台登录</p>
-        <el-form ref="form" :rules="rules" :model="form">
+        <el-form ref="submitForm" :rules="rules" :model="form">
           <div class="label">工号</div>
           <el-form-item prop="staffCode">
             <el-input
               maxlength="8"
-              v-model.trim="form.staffCode"
-               @keydown.enter="funLogin()"
+              v-model="form.staffCode"
+              @keydown.enter="funLogin()"
               placeholder="请输入工号"
               style="width: 320px"
             ></el-input>
@@ -23,8 +23,8 @@
           <el-form-item prop="password">
             <el-input
               type="password"
-              v-model.trim="form.password"
-               @keydown.enter="funLogin()"
+              v-model="form.password"
+              @keydown.enter="funLogin()"
               placeholder="请输入密码"
               style="width: 320px"
             ></el-input>
@@ -45,16 +45,24 @@
   </div>
 </template>
 <script>
-import { codeRule } from "@/utils/utils.js";
 import dialogForget from "@/components/dialogForget.vue";
 import dialogSetPassword from "@/components/dialogSetPassword.vue";
+import { reactive, onMounted, toRefs, ref, getCurrentInstance } from "vue";
+import { useRouter, useRoute } from "vue-router";
 export default {
   components: {
     dialogForget,
     dialogSetPassword,
   },
-  data() {
-    return {
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+    const dialogSetPassword = ref(null);
+    const dialogForget = ref(null);
+    const submitForm = ref(null);
+    const _this = getCurrentInstance();
+    const API = _this.proxy.$API;
+    const data = reactive({
       pageType: true,
       STATE: new Date().getTime() + Math.floor(Math.random() * 999999),
       loginTmpCode: "",
@@ -63,117 +71,104 @@ export default {
         password: "",
       },
       rules: {
-        staffCode: [
-          { required: true, message: "请输入工号", trigger: "blur" },
-          {
-            validator: codeRule,
-            trigger: "blur",
-          },
-        ],
+        staffCode: [{ required: true, message: "请输入工号", trigger: "blur" }],
         password: [{ required: true, message: "请输入密码", trigger: "blur" }],
       },
-      redirectUri:`${window.location.origin}/#/login`,
-    };
-  },
-  mounted() {
-    if (typeof window.addEventListener != "undefined") {
-      window.addEventListener("message", this.handleMessage, false);
-    } else if (typeof window.attachEvent != "undefined") {
-      window.attachEvent("onmessage", this.handleMessage);
-    }
-
-    /*
-     * 解释一下goto参数，参考以下例子：
-     * var url = encodeURIComponent('http://localhost.me/index.php?test=1&aa=2');
-     * var goto = encodeURIComponent('https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=SuiteKey&response_type=code&scope=snsapi_login&state=STATE&redirect_uri='+url)
-     */
-    //注意:后面的redirect_uri要用encodeURIComponent处理一下
-    console.log('this.redirectUri',this.redirectUri)
-    let goto = encodeURIComponent(
-      `https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${
-        import.meta.env.VUE_APP_DING_APP_ID
-      }&response_type=code&scope=snsapi_login&state=${
-        this.STATE
-      }&redirect_uri=${encodeURIComponent(this.redirectUri)}`
-    );
-    window.DDLogin({
-      id: "qrcode", //这里需要你在自己的页面定义一个HTML标签并设置id，例如<div id="login_container"></div>或<span id="login_container"></span>
-      goto: goto, //请参考注释里的方式
-      style: "border:none;background-color:#FFFFFF;",
-      width: "365",
-      height: "400",
+      redirectUri: `${window.location.origin}/#/login`,
     });
-
-    //扫码登录
-    if (this.$route.query.code&& !this.$route.query.redirect_uri) {
-      console.log('dingLogin')
-      this.$api.login
-        .dingLogin({
-          tmpAuthCode: this.$route.query.code,
-        })
-        .then((res) => {
-          if (res.data.code === 200) {
-            window.sessionStorage.setItem("staffCode", res.data.data.staffCode);
-            if (res.data.data.isFirstLogin) {
-              this.$refs.dialogSetPassword.show({
-                staffCode: res.data.data.staffCode,
-                isSelect: res.data.data.isSelect,
-              });
-            } else {
-              if (res.data.data.isSelect === "1") {
-                this.$router.push({
-                  name: "AccountType",
-                  query: {
-                    params: JSON.stringify({
-                      ...this.form,
-                      loginMode: "1",
-                    }),
-                  },
-                });
-              } else {
-                this.toHome({
-                  staffCode:res.data.data.staffCode,
-                  loginMode: "1",
-                });
-              }
-            }
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  },
-  methods: {
-    getUserBtn() {},
-    showForgetDialog() {
-      this.$refs.dialogForget.show();
-    },
-    toHome(params) {
+    onMounted(() => {
+      // if (typeof window.addEventListener != "undefined") {
+      //   window.addEventListener("message", handleMessage, false);
+      // } else if (typeof window.attachEvent != "undefined") {
+      //   window.attachEvent("onmessage", handleMessage);
+      // }
+      // /*
+      //  * 解释一下goto参数，参考以下例子：
+      //  * var url = encodeURIComponent('http://localhost.me/index.php?test=1&aa=2');
+      //  * var goto = encodeURIComponent('https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=SuiteKey&response_type=code&scope=snsapi_login&state=STATE&redirect_uri='+url)
+      //  */
+      // //注意:后面的redirect_uri要用encodeURIComponent处理一下
+      // let goto = encodeURIComponent(
+      //   `https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${import.meta.env.VUE_APP_DING_APP_ID
+      //   }&response_type=code&scope=snsapi_login&state=${data.STATE
+      //   }&redirect_uri=${encodeURIComponent(data.redirectUri)}`
+      // );
+      // window.DDLogin({
+      //   id: "qrcode", //这里需要你在自己的页面定义一个HTML标签并设置id，例如<div id="login_container"></div>或<span id="login_container"></span>
+      //   goto: goto, //请参考注释里的方式
+      //   style: "border:none;background-color:#FFFFFF;",
+      //   width: "365",
+      //   height: "400",
+      // });
+      // //扫码登录
+      // if (route.query.code && !route.query.redirect_uri) {
+      //   console.log('dingLogin')
+      //   API.login
+      //     .dingLogin({
+      //       tmpAuthCode: route.query.code,
+      //     })
+      //     .then((res) => {
+      //       if (res.data.code === 200) {
+      //         window.sessionStorage.setItem("staffCode", res.data.data.staffCode);
+      //         if (res.data.data.isFirstLogin) {
+      //           dialogSetPassword.value.show({
+      //             staffCode: res.data.data.staffCode,
+      //             isSelect: res.data.data.isSelect,
+      //           });
+      //         } else {
+      //           if (res.data.data.isSelect === "1") {
+      //             router.push({
+      //               name: "AccountType",
+      //               query: {
+      //                 params: JSON.stringify({
+      //                   ...data.form,
+      //                   loginMode: "1",
+      //                 }),
+      //               },
+      //             });
+      //           } else {
+      //             toHome({
+      //               staffCode: res.data.data.staffCode,
+      //               loginMode: "1",
+      //             });
+      //           }
+      //         }
+      //       }
+      //     })
+      //     .catch((err) => {
+      //       console.log(err);
+      //     });
+      // }
+    });
+    const showForgetDialog = () => {
+    console.log(dialogForget.value)
+      dialogForget.value.show();
+    };
+    const toHome = (params) => {
       params = {
         ...params,
         type: 2,
       };
-      this.$api.login.login(params).then(async ({ data }) => {
+      API.login.login(params).then(async ({ data }) => {
         console.log(data);
         await localStorage.setItem("adminToken", data.data);
-        this.getBtn();
-        this.getInfo();
+        getBtn();
+        getInfo();
       });
-    },
-    funLogin() {
-      this.$refs.form.validate((valid) => {
+    };
+    const funLogin = () => {
+      submitForm.value.validate((valid) => {
         if (valid) {
           let params = {
-            ...this.form,
+            ...data.form,
             loginMode: 2,
           };
-          this.$api.login.checkLogin(params).then(async ({ data }) => {
+          API.login.checkLogin(params).then(async ({ data }) => {
             console.log(data);
             if (data.data.isSelect == 0) {
-              this.toHome(params);
+              toHome(params);
             } else {
-              this.$router.push({
+              router.push({
                 name: "AccountType",
                 query: {
                   params: JSON.stringify(params),
@@ -185,15 +180,15 @@ export default {
           return false;
         }
       });
-    },
-    getBtn() {
-      this.$api.login.getCurrentUserBut().then(({ data }) => {
+    };
+    const getBtn = () => {
+      API.login.getCurrentUserBut().then(({ data }) => {
         console.log(data);
         localStorage.setItem("permissions", JSON.stringify(data.data));
       });
-    },
-    getInfo() {
-      this.$api.login.getCurrentUser().then(({ data }) => {
+    };
+    const getInfo = () => {
+      API.login.getCurrentUser().then(({ data }) => {
         console.log(data);
         localStorage.setItem(
           "menuList",
@@ -203,25 +198,37 @@ export default {
           staffName: data.data.staffName,
         };
         localStorage.setItem("adminUser", JSON.stringify(userInfo));
-        this.$router.push("/");
+        router.push("/");
       });
-    },
-    handleMessage(event) {
+    };
+    const handleMessage = (event) => {
       //获取loginTmpCode
       let origin = event.origin;
       if (origin == "https://login.dingtalk.com") {
         //判断是否来自ddLogin扫码事件。
-        this.loginTmpCode = event.data;
+        data.loginTmpCode = event.data;
         //获取到loginTmpCode后就可以在这里构造跳转链接进行跳转了
         window.location.href = `https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${
           import.meta.env.VUE_APP_DING_APP_ID
         }&response_type=code&scope=snsapi_login&state=${
-          this.STATE
-        }&redirect_uri=${encodeURIComponent(this.redirectUri)}&loginTmpCode=${
-          this.loginTmpCode
+          data.STATE
+        }&redirect_uri=${encodeURIComponent(data.redirectUri)}&loginTmpCode=${
+          data.loginTmpCode
         }`;
       }
-    },
+    };
+    return {
+      ...toRefs(data),
+      dialogSetPassword,
+      dialogForget,
+      submitForm,
+      showForgetDialog,
+      toHome,
+      funLogin,
+      getBtn,
+      getInfo,
+      handleMessage,
+    };
   },
 };
 </script>
@@ -241,6 +248,7 @@ export default {
     background: #ffffff;
     border-radius: 10px;
     position: relative;
+
     .switch-btn {
       position: absolute;
       width: 64px;
@@ -251,10 +259,12 @@ export default {
       background-size: cover;
       cursor: pointer;
     }
+
     .icon-pwd {
       background: url("../assets/img/icon-pwd.png") 0 0 no-repeat;
       background-size: cover;
     }
+
     .pwd {
       display: flex;
       flex-direction: column;
@@ -268,12 +278,14 @@ export default {
         margin-top: 20px;
         margin-bottom: 26px;
       }
+
       .label {
         font-weight: 500;
         color: rgba(0, 0, 0, 0.65);
         font-size: 14px;
         margin-bottom: 10px;
       }
+
       .submit-btn {
         width: 320px;
         height: 45px;
@@ -285,11 +297,13 @@ export default {
         cursor: pointer;
       }
     }
+
     .qrcode-box {
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 50px;
+
       p {
         font-size: 20px;
         font-weight: 500;
@@ -297,16 +311,19 @@ export default {
         margin-bottom: 20px;
       }
     }
+
     .forget {
       display: flex;
       justify-content: flex-end;
       align-items: center;
       font-size: 12px;
       margin-bottom: 32px;
+
       div {
         cursor: pointer;
         display: flex;
         align-items: center;
+
         i {
           width: 16px;
           height: 16px;
@@ -314,6 +331,7 @@ export default {
           background-size: cover;
           margin-right: 4px;
         }
+
         span {
           color: rgba(0, 0, 0, 0.65);
         }

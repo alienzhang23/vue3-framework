@@ -7,7 +7,7 @@
     @close="hide()"
   >
     <div>
-      <el-form ref="form" :rules="rules" :model="form" label-width="30%">
+      <el-form ref="submitForm" :rules="rules" :model="form" label-width="30%">
         <el-form-item label="工号:">
           <div>{{ form.staffCode }}</div>
         </el-form-item>
@@ -44,13 +44,21 @@
   </el-dialog>
 </template>
 <script>
+import { ElMessage } from 'element-plus'
+import { reactive, onMounted,  toRefs, ref, getCurrentInstance } from "vue";
+import { useRouter } from "vue-router";
+
 export default {
-  data() {
-    var validatePass1 = (rule, value, callback) => {
+  setup() {
+  const submitForm = ref(null);
+   const _this = getCurrentInstance();
+    const API = _this.proxy.$API;
+      const router = useRouter();
+    const validatePass1 = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入密码"));
       } else {
-        if (this.form.confirmPassword !== value && this.form.confirmPassword) {
+        if (data.form.confirmPassword !== value && data.form.confirmPassword) {
           callback(new Error("两次输入密码不一致"));
         } else if (value.length < 8) {
           callback(new Error("密码长度需至少为8位"));
@@ -58,11 +66,11 @@ export default {
         callback();
       }
     };
-    var validatePass2 = (rule, value, callback) => {
+    const validatePass2 = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入密码"));
       } else {
-        if (this.form.newPassword !== value && this.form.newPassword) {
+        if (data.form.newPassword !== value && data.form.newPassword) {
           callback(new Error("两次输入密码不一致"));
         } else if (value.length < 8) {
           callback(new Error("密码长度需至少为8位"));
@@ -70,7 +78,7 @@ export default {
         callback();
       }
     };
-    return {
+    const data=reactive({
       form: {
         staffCode: "",
         newPassword: "",
@@ -82,33 +90,32 @@ export default {
       },
       isSelect: "",
       dialogVisible: false,
-    };
-  },
-  methods: {
-    clearValidate(name) {
-      if (this.form.newPassword === this.form.confirmPassword) {
-        this.$refs.form.clearValidate(name);
+    })
+    onMounted(()=>{})
+     const clearValidate=(name)=> {
+      if (data.form.newPassword === data.form.confirmPassword) {
+        submitForm.value.clearValidate(name);
       }
-    },
-    funSubmit() {
-      this.$refs.form.validate((valid) => {
+    }
+    const funSubmit=()=> {
+      submitForm.value.validate((valid) => {
         if (valid) {
-          this.$api.login.setUpPassword(this.form).then((res) => {
+          API.login.setUpPassword(data.form).then((res) => {
             if (res.data.code === 200) {
-              if (this.isSelect === "1") {
-                this.$router.push({
+              if (data.isSelect === "1") {
+                router.push({
                   name: "AccountType",
                   query: {
                     params: JSON.stringify({
-                      staffCode: this.form.staffCode,
-                      password: this.form.newPassword,
+                      staffCode: data.form.staffCode,
+                      password: data.form.newPassword,
                       loginMode: "1",
                     }),
                   },
                 });
               } else {
-                this.hide();
-                this.$message.success("设置成功!");
+                hide();
+                ElMessage.success("设置成功!");
               }
             }
           });
@@ -117,18 +124,26 @@ export default {
           return false;
         }
       });
-    },
-    show(data) {
-      this.dialogVisible = true;
-      this.form.staffCode = data.staffCode;
-      this.isSelect = data.isSelect;
-      this.dialogVisible = true;
-    },
-    hide() {
+    }
+    const show=(data)=> {
+      data.dialogVisible = true;
+      data.form.staffCode = data.staffCode;
+      data.isSelect = data.isSelect;
+      data.dialogVisible = true;
+    }
+    const hide=()=> {
       window.location.href = `${window.location.origin}/#/login`;
-      this.dialogVisible = false;
-    },
+      data.dialogVisible = false;
+    }
+    return {
+      ...toRefs(data),
+      clearValidate,
+      funSubmit,
+      show,
+      hide
+    };
   },
+ 
 };
 </script>
 <style lang="less" scoped>

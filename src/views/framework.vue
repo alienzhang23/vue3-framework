@@ -1,14 +1,13 @@
 <template>
   <el-container class="framework">
     <el-aside style="background-color: rgb(238, 241, 246); width: auto">
-    
       <el-menu
         :default-openeds="['0']"
         :default-active="defaultActive"
         @open="handleOpen"
         @close="handleClose"
         :collapse="isCollapse"
-         background-color="#001529"
+        background-color="#001529"
         text-color="#fff"
         active-text-color="#ffd04b"
         class="el-menu-vertical-demo"
@@ -30,8 +29,8 @@
             <el-menu-item
               :index="`${index}-${key}`"
               @click="funGo(val.path, `${index}-${key}`)"
-              >{{ val.title }}</el-menu-item
-            >
+              >{{ val.title }}
+            </el-menu-item>
           </el-menu-item-group>
 
           <el-submenu
@@ -89,7 +88,7 @@
         </div>
       </el-header>
       <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
-        <el-breadcrumb-item v-for="item,index in breadcrumb" :key="index">{{
+        <el-breadcrumb-item v-for="(item, index) in breadcrumb" :key="index">{{
           item
         }}</el-breadcrumb-item>
       </el-breadcrumb>
@@ -100,10 +99,17 @@
   </el-container>
 </template>
 <script>
-import { ref, computed, watch, getCurrentInstance } from "vue";
+import {
+  reactive,
+  onMounted,
+  toRefs,
+  computed,
+} from "vue";
+import { useRouter } from "vue-router";
 export default {
-  data() {
-    return {
+  setup() {
+    const router = useRouter();
+    const data = reactive({
       isCollapse: false,
       menuList: [
         {
@@ -137,70 +143,79 @@ export default {
       ],
       defaultActive: "0-0",
       breadcrumb: [],
+    });
+    onMounted(() => {});
+    const funLogout = () => {
+      router.replace("/login");
     };
-  },
-  computed: {
-    menuList1() {
+    const funSwitch = () => {
+      data.isCollapse = !data.isCollapse;
+    };
+    const handleOpen = (key, keyPath) => {
+      console.log(key, keyPath);
+    };
+    const handleClose = (key, keyPath) => {
+      console.log(key, keyPath);
+    };
+    const funGo = (url, navList) => {
+      if (url && !window.location.hash.includes(url)) {
+        router.push(url);
+      }
+      data.defaultActive = navList;
+      pushNav(navList);
+    };
+    const pushNav = (navList) => {
+      data.breadcrumb = [];
+      let list = navList.split("-");
+      switch (list.length) {
+        case 3:
+          data.breadcrumb.push(
+            data.menuList[list[0]].title,
+            data.menuList[list[0]].children[list[1]].title,
+            data.menuList[list[0]].children[list[1]].children[list[2]].title
+          );
+          break;
+        case 2:
+          data.breadcrumb.push(
+            data.menuList[list[0]].title,
+            data.menuList[list[0]].children[list[1]].title
+          );
+          break;
+        case 1:
+          data.breadcrumb.push(data.menuList[list[0]].title);
+          break;
+      }
+    };
+    const menuList1 = computed(() => {
       let list = [];
-      for (let item of this.menuList) {
+      for (let item of data.menuList) {
         if (item.path) {
           list.push(item);
         }
       }
       return list;
-    },
-    menuList2() {
-      let list = [];
-      for (let item of this.menuList) {
-        if (!item.path) {
-          list.push(item);
+    });
+    const menuList2= computed(() => {
+         let list = [];
+        for (let item of data.menuList) {
+          if (!item.path) {
+            list.push(item);
+          }
         }
-      }
-      return list;
-    },
-  },
-  methods: {
-    funLogout(){
-      this.$router.replace('/login')
-    },
-     funSwitch() {
-      this.isCollapse = !this.isCollapse;
-    },
-    handleOpen(key, keyPath) {
-      console.log(key, keyPath);
-    },
-    handleClose(key, keyPath) {
-      console.log(key, keyPath);
-    },
-    funGo(url, navList) {
-      if (url && !window.location.hash.includes(url)) {
-        this.$router.push(url);
-      }
-      this.defaultActive = navList;
-      this.pushNav(navList);
-    },
-    pushNav(navList) {
-      this.breadcrumb = [];
-      let list = navList.split("-");
-      switch (list.length) {
-        case 3:
-          this.breadcrumb.push(
-            this.menuList[list[0]].title,
-            this.menuList[list[0]].children[list[1]].title,
-            this.menuList[list[0]].children[list[1]].children[list[2]].title
-          );
-          break;
-        case 2:
-          this.breadcrumb.push(
-            this.menuList[list[0]].title,
-            this.menuList[list[0]].children[list[1]].title
-          );
-          break;
-        case 1:
-          this.breadcrumb.push(this.menuList[list[0]].title);
-          break;
-      }
-    },
+        return list;
+    })
+ 
+    return {
+      ...toRefs(data),
+      funLogout,
+      funSwitch,
+      handleOpen,
+      handleClose,
+      funGo,
+      pushNav,
+      menuList1,
+      menuList2
+    };
   },
 };
 </script>
@@ -209,9 +224,11 @@ export default {
   height: 100vh;
   overflow: hidden;
 }
+
 .breadcrumb {
   padding: 10px;
 }
+
 .icon-switch {
   cursor: pointer;
   font-size: 28px;
@@ -221,28 +238,31 @@ export default {
 <style>
 .el-header {
   background-color: #ffffff;
-    color: #333;
-    line-height: 60px;
-    border-bottom: 1px solid #e8e8e8;
+  color: #333;
+  line-height: 60px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 .el-aside {
   color: #333;
   height: 100%;
 }
+
 .el-container {
   height: 100%;
   overflow: hidden;
 }
+
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   width: 200px;
   min-height: 400px;
 }
+
 .el-menu--collapse {
   height: 100% !important;
 }
+
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   height: 100% !important;
 }
 </style>
-
