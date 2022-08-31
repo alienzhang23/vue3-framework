@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "serve": "vite",
+    "serve": "vite --port 8888",
     "build": "vite build",
     "preview": "vite preview",
     "build:dev": "vue-tsc --noEmit && vite build --mode development",
@@ -11,10 +11,10 @@
     "build:prod": "vue-tsc --noEmit && vite build --mode production"
   },
   "dependencies": {
-    "vue": "^3.2.25",
     "axios": "^0.24.0",
     "core-js": "^3.6.5",
-    "element-plus": "^1.0.2-beta.44",
+    "element-plus": "^2.2.14",
+    "vue": "^3.2.25",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0"
   },

@@ -3,7 +3,8 @@
     <el-aside style="background-color: rgb(238, 241, 246); width: auto">
       <el-menu
         :default-openeds="['0']"
-        :default-active="defaultActive"
+        :default-active="router.currentRoute.value.fullPath"
+        router
         @open="handleOpen"
         @close="handleClose"
         :collapse="isCollapse"
@@ -12,139 +13,178 @@
         active-text-color="#ffd04b"
         class="el-menu-vertical-demo"
       >
-        <el-submenu
-          :index="`${index}`"
-          v-for="(item, index) in menuList2"
-          :key="index"
-        >
-          <template v-slot:title
-            ><i class="el-icon-location"></i
-            ><span>{{ item.title }}</span></template
+        <template v-for="(item, index) in menuList" :key="index">
+          <el-sub-menu
+            v-if="item.children && item.children.length"
+            :index="item.path"
           >
-          <el-menu-item-group
-            v-show="!val.children"
-            v-for="(val, key) in item.children"
-            :key="key"
-          >
-            <el-menu-item
-              :index="`${index}-${key}`"
-              @click="funGo(val.path, `${index}-${key}`)"
-              >{{ val.title }}
-            </el-menu-item>
-          </el-menu-item-group>
+            <template #title
+              ><el-icon><component :is="item.icon"></component></el-icon
+              ><span>{{ item.name }}</span>
+            </template>
+            <el-menu-item-group
+              v-show="!val.children"
+              v-for="(val, key) in item.children"
+              :key="key"
+            >
+              <el-menu-item :index="val.path" @click="funGo(val)"
+                >{{ val.name }}
+              </el-menu-item>
+            </el-menu-item-group>
 
-          <el-submenu
-            :index="`${index}-${key}`"
-            v-show="val.children"
-            v-for="(val, key) in item.children"
-            :key="key"
-          >
-            <template #title>{{ val.title }}</template>
-            <el-menu-item
-              :index="`${index}-${key}-${num}`"
-              v-for="(child, num) in val.children"
-              :key="num"
-              @click="funGo(child.path, `${index}-${key}-${num}`)"
-              >{{ child.title }}</el-menu-item
+            <el-sub-menu
+              :index="val.path"
+              v-show="val.children"
+              v-for="(val, key) in item.children"
+              :key="key"
             >
-          </el-submenu>
-        </el-submenu>
-        <el-menu-item-group v-for="(item, index) in menuList1" :key="index">
-          <el-menu-item
-            :index="`${index}`"
-            @click="funGo(item.path, `${index}`)"
-          >
-            <i class="el-icon-menu"></i>
-            <template v-slot:title
-              ><span>{{ item.title }}</span></template
-            >
+              <template #title>{{ val.name }}</template>
+              <el-menu-item
+                v-for="(child, num) in val.children"
+                :index="child.path"
+                :key="num"
+                @click="funGo(child)"
+                >{{ child.name }}</el-menu-item
+              >
+            </el-sub-menu>
+          </el-sub-menu>
+          <el-menu-item v-else :index="item.path" @click="funGo(item)">
+            <el-icon><component :is="item.icon"></component></el-icon
+            ><span>{{ item.name }}</span>
           </el-menu-item>
-        </el-menu-item-group>
+        </template>
       </el-menu>
     </el-aside>
 
     <el-container>
       <el-header style="text-align: right; font-size: 12px">
-        <div style="display: flex; justify-content: space-between">
-          <i
-            :class="[
-              { 'el-icon-s-fold': !isCollapse },
-              'el-icon-s-unfold',
-              'icon-switch',
-            ]"
-            @click="funSwitch()"
-          ></i>
+        <div
+          style="display: flex; justify-content: space-between; height: 100%"
+        >
+          <div style="display: flex; align-items: center; flex: 1">
+            <el-icon :size="28">
+              <component
+                class="icon-switch"
+                :is="iconSwitch"
+                @click="funSwitch()"
+              ></component>
+            </el-icon>
+
+            <el-breadcrumb
+              separator-class="el-icon-arrow-right"
+              class="breadcrumb"
+            >
+              <el-breadcrumb-item
+                v-for="(item, index) in breadcrumb"
+                :key="index"
+                class="breadcrumb-item"
+                >{{ item.name }}</el-breadcrumb-item
+              >
+            </el-breadcrumb>
+          </div>
+
           <div>
             <el-dropdown>
-              <i class="el-icon-setting" style="margin-right: 15px"></i>
+              <span class="user-box">
+                <span style="margin-right: 10px">王小虎</span>
+                <el-icon :size="20"><setting /></el-icon>
+              </span>
+
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item @click="funLogout()">退出</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
-            <span>王小虎</span>
           </div>
         </div>
       </el-header>
-      <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
-        <el-breadcrumb-item v-for="(item, index) in breadcrumb" :key="index">{{
-          item
-        }}</el-breadcrumb-item>
-      </el-breadcrumb>
+
+      <pageTags
+        v-model:tag="tag"
+        v-model:refreshKey="showRouterView"
+        @tagChange="tagChange"
+      ></pageTags>
       <el-main>
-        <router-view />
+        <router-view v-if="showRouterView" />
       </el-main>
     </el-container>
   </el-container>
 </template>
 <script>
-import {
-  reactive,
-  onMounted,
-  toRefs,
-  computed,
-} from "vue";
+import { reactive, onMounted, toRefs, computed } from "vue";
 import { useRouter } from "vue-router";
+import pageTags from "@/components/pageTags.vue";
 export default {
+  components: { pageTags },
   setup() {
     const router = useRouter();
+
+    const iconSwitch = computed(() => {
+      if (data.isCollapse) {
+        return "expand";
+      } else {
+        return "fold";
+      }
+    });
     const data = reactive({
+      showRouterView: true,
       isCollapse: false,
       menuList: [
         {
-          title: "导航一",
-          icon: "el-icon-message",
+          name: "导航一",
+          icon: "setting",
+          path: "/menu1",
           children: [
             {
-              title: "选项1",
-              path: "/index",
+              name: "选项1",
+              path: "/menu1/index",
             },
             {
-              title: "选项2",
-              path: "/about",
+              name: "选项2",
+              path: "/menu1/about",
             },
             {
-              title: "选项3",
+              name: "选项3",
+              path: "/menu1-3",
               children: [
                 {
-                  title: "选项3-1",
-                  path: "/page1",
+                  name: "选项3-1",
+                  path: "/menu1-3/page1",
                 },
               ],
             },
           ],
         },
         {
-          title: "导航二",
-          icon: "el-icon-menu",
-          path: "/page2",
+          name: "导航二",
+          icon: "location",
+          path: "/menu2",
         },
       ],
-      defaultActive: "0-0",
       breadcrumb: [],
+      currentPath: "",
+      tag: {
+        name: "选项1",
+        path: "/menu1/index",
+      },
+      num: 0,
     });
-    onMounted(() => {});
+    onMounted(() => {
+      console.log(router.currentRoute.value.fullPath);
+      //生成初始面包屑
+      // pushNav(getCurrentRouterObj(data.menuList));
+    });
+    const getCurrentRouterObj=(list)=>{
+      for(let index in list){
+        if(router.currentRoute.value.fullPath===list[index].path){
+          return list[index]
+        }
+        if(list[index].children){
+          getCurrentRouterObj(list[index].children)
+        }
+      }
+    }
     const funLogout = () => {
       router.replace("/login");
     };
@@ -157,54 +197,34 @@ export default {
     const handleClose = (key, keyPath) => {
       console.log(key, keyPath);
     };
-    const funGo = (url, navList) => {
-      if (url && !window.location.hash.includes(url)) {
-        router.push(url);
+    const funGo = (routerObj) => {
+      if (routerObj.path && !window.location.hash.includes(routerObj.path)) {
+        router.push(routerObj.path);
       }
-      data.defaultActive = navList;
-      pushNav(navList);
+      //添加页面标签
+      data.tag = JSON.parse(JSON.stringify(routerObj));
+      pushNav(routerObj);
     };
-    const pushNav = (navList) => {
+    const pushNav = (routerObj) => {
+      //添加面包屑
       data.breadcrumb = [];
-      let list = navList.split("-");
-      switch (list.length) {
-        case 3:
-          data.breadcrumb.push(
-            data.menuList[list[0]].title,
-            data.menuList[list[0]].children[list[1]].title,
-            data.menuList[list[0]].children[list[1]].children[list[2]].title
-          );
-          break;
-        case 2:
-          data.breadcrumb.push(
-            data.menuList[list[0]].title,
-            data.menuList[list[0]].children[list[1]].title
-          );
-          break;
-        case 1:
-          data.breadcrumb.push(data.menuList[list[0]].title);
-          break;
-      }
+
+      creatBreadcrub(routerObj.path, data.menuList);
     };
-    const menuList1 = computed(() => {
-      let list = [];
-      for (let item of data.menuList) {
-        if (item.path) {
-          list.push(item);
-        }
-      }
-      return list;
-    });
-    const menuList2= computed(() => {
-         let list = [];
-        for (let item of data.menuList) {
-          if (!item.path) {
-            list.push(item);
+    const creatBreadcrub = (url, list) => {
+      for (let index in list) {
+        if (url.includes(list[index].path)) {
+          data.breadcrumb.push(list[index]);
+          if (list[index].children) {
+            creatBreadcrub(url, list[index].children);
           }
         }
-        return list;
-    })
- 
+      }
+    };
+    const tagChange = (val) => {
+      console.log(val);
+      pushNav(val);
+    };
     return {
       ...toRefs(data),
       funLogout,
@@ -213,8 +233,11 @@ export default {
       handleClose,
       funGo,
       pushNav,
-      menuList1,
-      menuList2
+      tagChange,
+      iconSwitch,
+      router,
+      creatBreadcrub,
+      getCurrentRouterObj
     };
   },
 };
@@ -223,16 +246,67 @@ export default {
 .framework {
   height: 100vh;
   overflow: hidden;
+  .user-box {
+    cursor: pointer;
+    padding-top: 20px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
 }
 
 .breadcrumb {
   padding: 10px;
+  .breadcrumb-item {
+    cursor: pointer;
+    ::v-deep .el-breadcrumb__inner {
+      &:hover {
+        color: #000;
+        font-weight: bold;
+      }
+    }
+  }
 }
 
 .icon-switch {
   cursor: pointer;
-  font-size: 28px;
-  margin-top: 15px;
+}
+.scrollbar-flex-content {
+  display: flex;
+  overflow-x: auto;
+  padding: 5px;
+  border-bottom: 1px solid #d8dce5;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 12%), 0 0 3px 0 rgba(0, 0, 0, 4%);
+
+  .tag-item {
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  /* 设置滚动条的样式 */
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 4px;
+  }
+  /* 滚动槽 */
+  &::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  /* 滚动条滑块 */
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
+  }
+  &::-webkit-scrollbar-thumb:window-inactive {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+::v-deep .el-main {
+  padding-top: 10px;
+}
+::v-deep .el-scrollbar {
+  height: 50px;
 }
 </style>
 <style>
