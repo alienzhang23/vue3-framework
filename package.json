@@ -6,9 +6,9 @@
     "serve": "vite --port 8888",
     "build": "vite build",
     "preview": "vite preview",
-    "build:dev": "vue-tsc --noEmit && vite build --mode development",
-    "build:sit": "vue-tsc --noEmit && vite build --mode sit",
-    "build:prod": "vue-tsc --noEmit && vite build --mode production"
+    "build:dev": "vite build --mode development",
+    "build:sit": "vite build --mode sit",
+    "build:prod": "vite build --mode production"
   },
   "dependencies": {
     "axios": "^0.24.0",

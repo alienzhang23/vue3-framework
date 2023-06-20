@@ -62,4 +62,11 @@ const router = createRouter({
   routes,
 });
 
+router.onError(error => { //解决vite打包发布时由于文件hash值改变引起的线上跳转报错(找不到文件)
+  if (error.message.includes('Failed to fetch dynamically imported module')) {
+    console.log(error)
+    router.go(0)
+    window.location.reload()
+  }
+})
 export default router;
